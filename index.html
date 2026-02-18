@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Arena Mobile V3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>V11 - CURSED MOON DEITY</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
-
-<!-- GAME UI -->
-<div id="ui">
-
-  <div class="joystick">
-  <div class="stick"></div>
-</div>
-  <div class="rightButtons">
-    <div class="btn light">Light</div>
-    <div class="btn heavy">Heavy</div>
-    <div class="btn dash">Dash</div>
-    <div class="btn block">Block</div>
-    <div class="btn skill">
-      <div id="skillPercent">0%</div>
-    </div>
+<div class="ui-top">
+  <div class="hp-bar">
+    <div id="playerHP"></div>
   </div>
 
+  <div class="boss-bar">
+    <div id="bossHP"></div>
+  </div>
 </div>
 
-<script type="module" src="main.js"></script>
+<canvas id="game"></canvas>
 
+<div class="controls">
+  <div id="joystick"></div>
+
+  <div class="skill-buttons">
+    <button onclick="skill1()">⚡</button>
+    <button onclick="skill2()">🌑</button>
+    <button onclick="skill3()">☠</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
 </body>
 </html>
