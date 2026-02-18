@@ -1,176 +1,181 @@
-import Character from "./Character.js";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-export default class Game {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  constructor(canvas){
+// ================= PLAYER =================
+let player = {
+  x: 200,
+  y: canvas.height - 200,
+  size: 40,
+  hp: 100,
+  speed: 4
+};
 
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
+// ================= BOSS =================
+let boss = {
+  x: canvas.width - 350,
+  y: canvas.height - 420,
+  hp: 500,
+  maxHp: 500,
+  size: 140,
+  phase2: false,
+  auraPulse: 0,
+  attackCooldown: 0
+};
 
-    this.state = "PLAY";
-    this.shake = 0;
+let moveX = 0;
+let moveY = 0;
 
-    this.player = new Character(350, 500, "red");
-    this.enemy  = new Character(900, 500, "cyan");
+let projectiles = [];
+let screenFlash = 0;
 
-    this.player.scale = 1.1;
-    this.enemy.scale = 1;
+// ================= MOBILE JOYSTICK =================
+document.getElementById("joystick").addEventListener("touchmove", e => {
+  let touch = e.touches[0];
+  moveX = (touch.clientX - 80 - 40) / 40;
+  moveY = (touch.clientY - (canvas.height - 80) - 40) / 40;
+});
 
-    this.lastTime = 0;
+// ================= SKILLS =================
+function skill1() { boss.hp -= 20; }
+function skill2() { boss.hp -= 40; }
+function skill3() { boss.hp -= 70; }
 
-    requestAnimationFrame(this.loop.bind(this));
+// ================= PHASE CHECK =================
+function checkPhase() {
+  if (!boss.phase2 && boss.hp <= boss.maxHp / 2) {
+    boss.phase2 = true;
+    screenFlash = 30;
   }
-
-  /* ========================= */
-  /*          UPDATE           */
-  /* ========================= */
-
-  update(delta){
-
-    if(this.state !== "PLAY") return;
-
-    this.player.regen();
-    this.enemy.regen();
-
-    // AI Behavior
-    this.enemyAI();
-
-    // ตรวจชนระยะใกล้
-    this.handleCombat();
-
-    // เช็คแพ้ชนะ
-    if(this.player.hp <= 0){
-      this.state = "END";
-      console.log("YOU LOSE");
-    }
-
-    if(this.enemy.hp <= 0){
-      this.state = "END";
-      console.log("YOU WIN");
-    }
-
-    // อัปเดต UI
-    this.updateUI();
-
-    // ลดแรงสั่นจอ
-    if(this.shake > 0){
-      this.shake -= delta * 0.02;
-      if(this.shake < 0) this.shake = 0;
-    }
-  }
-
-  /* ========================= */
-  /*          AI SYSTEM        */
-  /* ========================= */
-
-  enemyAI(){
-
-    const dist = this.enemy.distance(this.player);
-
-    // เดินเข้า
-    if(dist > 120){
-      this.enemy.move(-0.6,0);
-    }
-
-    // โจมตีสุ่ม
-    if(dist < 120 && Math.random() < 0.02){
-      this.enemy.attack(this.player, 10);
-      this.shake = 10;
-    }
-
-    // บล็อกสุ่ม
-    this.enemy.blocking = Math.random() < 0.01;
-  }
-
-  /* ========================= */
-  /*       COMBAT CHECK        */
-  /* ========================= */
-
-  handleCombat(){
-
-    // Knockback effect
-    if(this.player.knockback > 0){
-      this.player.x += this.player.knockback;
-      this.player.knockback -= 1;
-    }
-
-    if(this.enemy.knockback > 0){
-      this.enemy.x += this.enemy.knockback;
-      this.enemy.knockback -= 1;
-    }
-  }
-
-  /* ========================= */
-  /*          DRAW             */
-  /* ========================= */
-
-  draw(){
-
-    const ctx = this.ctx;
-
-    ctx.save();
-
-    // Camera shake
-    if(this.shake > 0){
-      ctx.translate(
-        (Math.random()-0.5)*this.shake,
-        (Math.random()-0.5)*this.shake
-      );
-    }
-
-    ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
-
-    // พื้น
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, this.canvas.height-100, this.canvas.width, 100);
-
-    // ตัวละคร
-    this.player.draw(ctx);
-    this.enemy.draw(ctx);
-
-    ctx.restore();
-
-    // END TEXT
-    if(this.state === "END"){
-      ctx.fillStyle = "white";
-      ctx.font = "50px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        this.player.hp <= 0 ? "YOU LOSE" : "YOU WIN",
-        this.canvas.width/2,
-        this.canvas.height/2
-      );
-    }
-  }
-
-  /* ========================= */
-  /*          UI UPDATE        */
-  /* ========================= */
-
-  updateUI(){
-
-    const pHP = document.getElementById("playerHP");
-    const eHP = document.getElementById("enemyHP");
-    const skill = document.getElementById("skillPercent");
-
-    if(pHP) pHP.style.width = this.player.hp + "%";
-    if(eHP) eHP.style.width = this.enemy.hp + "%";
-    if(skill) skill.innerText = Math.floor(this.player.skill) + "%";
-  }
-
-  /* ========================= */
-  /*          LOOP             */
-  /* ========================= */
-
-  loop(time){
-
-    const delta = time - this.lastTime;
-    this.lastTime = time;
-
-    this.update(delta);
-    this.draw();
-
-    requestAnimationFrame(this.loop.bind(this));
-  }
-
 }
+
+// ================= BOSS AI =================
+function bossAI() {
+
+  let speed = boss.phase2 ? 3 : 1.5;
+
+  if (boss.x > player.x) boss.x -= speed;
+  if (boss.x < player.x) boss.x += speed;
+
+  if (Math.abs(boss.x - player.x) < 120) {
+    player.hp -= boss.phase2 ? 0.6 : 0.2;
+  }
+
+  // ยิงพลังใน Phase 2
+  if (boss.phase2 && boss.attackCooldown <= 0) {
+    projectiles.push({
+      x: boss.x,
+      y: boss.y,
+      vx: (player.x - boss.x) * 0.02,
+      vy: (player.y - boss.y) * 0.02
+    });
+    boss.attackCooldown = 60;
+  }
+
+  boss.attackCooldown--;
+}
+
+// ================= DRAW PLAYER =================
+function drawPlayer() {
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+}
+
+// ================= DRAW PROJECTILES =================
+function drawProjectiles() {
+  ctx.fillStyle = "purple";
+  projectiles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (Math.abs(p.x - player.x) < 30 &&
+        Math.abs(p.y - player.y) < 30) {
+      player.hp -= 2;
+    }
+  });
+}
+
+// ================= DRAW BOSS =================
+function drawBoss() {
+
+  boss.auraPulse += 0.1;
+
+  // Aura Phase 2
+  if (boss.phase2) {
+    ctx.beginPath();
+    ctx.arc(
+      boss.x + 70,
+      boss.y - 50,
+      160 + Math.sin(boss.auraPulse) * 10,
+      0,
+      Math.PI * 2
+    );
+    ctx.strokeStyle = "purple";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+
+  // Body
+  ctx.fillStyle = boss.phase2 ? "#ddd" : "white";
+  ctx.fillRect(boss.x, boss.y, boss.size, boss.size * 1.5);
+
+  // Head
+  ctx.fillRect(boss.x + 30, boss.y - 90, 80, 80);
+
+  // Horn (Moon)
+  ctx.beginPath();
+  ctx.arc(boss.x + 70, boss.y - 110, 110, 0.2 * Math.PI, 0.8 * Math.PI);
+  ctx.strokeStyle = boss.phase2 ? "purple" : "white";
+  ctx.lineWidth = 12;
+  ctx.stroke();
+
+  // Eyes
+  ctx.fillStyle = boss.phase2 ? "red" : "black";
+  ctx.fillRect(boss.x + 50, boss.y - 60, 12, 12);
+  ctx.fillRect(boss.x + 80, boss.y - 60, 12, 12);
+
+  // Smile
+  ctx.beginPath();
+  ctx.arc(boss.x + 70, boss.y - 40, 25, 0, Math.PI);
+  ctx.stroke();
+}
+
+// ================= SCREEN FLASH =================
+function drawFlash() {
+  if (screenFlash > 0) {
+    ctx.fillStyle = "rgba(255,0,255,0.3)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    screenFlash--;
+  }
+}
+
+// ================= UPDATE =================
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  player.x += moveX * player.speed;
+  player.y += moveY * player.speed;
+
+  checkPhase();
+  bossAI();
+
+  drawPlayer();
+  drawBoss();
+  drawProjectiles();
+  drawFlash();
+
+  document.getElementById("playerHP").style.width =
+    Math.max(player.hp,0) + "%";
+
+  document.getElementById("bossHP").style.width =
+    (boss.hp / boss.maxHp) * 100 + "%";
+
+  requestAnimationFrame(update);
+}
+
+update();
