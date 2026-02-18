@@ -6,14 +6,22 @@ export default class Game {
     this.ctx = canvas.getContext("2d");
     this.canvas = canvas;
 
-    this.player = new Character(300, 500, "blue");
+    this.player = new Character(400, 500, "cyan");
     this.enemy = new Character(900, 500, "red");
 
     this.loop();
   }
 
   update(){
-    this.enemy.idle();
+
+    // ศัตรูเดินเข้าหา
+    if(this.enemy.distance(this.player) > 80){
+      this.enemy.move(-0.3,0);
+    }
+
+    // อัปเดต HP UI
+    document.getElementById("playerHP").style.width = this.player.hp+"%";
+    document.getElementById("enemyHP").style.width = this.enemy.hp+"%";
   }
 
   draw(){
@@ -25,6 +33,10 @@ export default class Game {
   loop(){
     this.update();
     this.draw();
+    requestAnimationFrame(()=>this.loop());
+  }
+
+}
     requestAnimationFrame(()=>this.loop());
   }
 
