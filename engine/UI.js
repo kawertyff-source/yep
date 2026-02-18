@@ -1,57 +1,30 @@
+// Update bars / messages
 export default class UI {
-
-  constructor(game){
-    this.game=game;
-
-    this.setupButtons();
-    this.setupJoystick();
+  constructor(player, boss){
+    this.player = player;
+    this.boss = boss;
+    this.playerHP = document.getElementById("playerHP");
+    this.bossHP = document.getElementById("bossHP");
+    this.energyVal = document.getElementById("energyVal");
+    this.messages = document.getElementById("messages");
+    this._msgTimer = 0;
   }
 
-  setupButtons(){
+  update(){
+    if(this.playerHP) this.playerHP.style.width = Math.max(0, (this.player.hp / 200) * 100) + "%";
+    if(this.bossHP) this.bossHP.style.width = Math.max(0, (this.boss.hp / 900) * 100) + "%";
+    if(this.energyVal) this.energyVal.innerText = Math.floor(this.player.energy);
 
-    document.querySelector(".light").ontouchstart=()=>{
-      this.game.player.attack(this.game.enemy,5);
-    };
-
-    document.querySelector(".heavy").ontouchstart=()=>{
-      this.game.player.attack(this.game.enemy,15);
-    };
-
-    document.querySelector(".dash").ontouchstart=()=>{
-      this.game.player.dash(1);
-    };
-
-    document.querySelector(".block").ontouchstart=()=>{
-      this.game.player.blocking=true;
-    };
-
-    document.querySelector(".block").ontouchend=()=>{
-      this.game.player.blocking=false;
-    };
+    // messages (e.g. domain on)
+    if(this.player.domainActive && this._msgTimer <= 0){
+      this.showMessage("DOMAIN ACTIVATED");
+    }
+    if(this._msgTimer > 0) this._msgTimer--;
   }
 
-  setupJoystick(){
-
-    const joystick=document.querySelector(".joystick");
-    const stick=document.querySelector(".stick");
-
-    joystick.ontouchmove=(e)=>{
-      const rect=joystick.getBoundingClientRect();
-      const touch=e.touches[0];
-
-      const x=touch.clientX-rect.left-70;
-      const y=touch.clientY-rect.top-70;
-
-      stick.style.left=(x+40)+"px";
-      stick.style.top=(y+40)+"px";
-
-      this.game.player.move(x/50,y/50);
-    };
-
-    joystick.ontouchend=()=>{
-      stick.style.left="40px";
-      stick.style.top="40px";
-    };
+  showMessage(text, time = 140){
+    if(this.messages) this.messages.innerText = text;
+    this._msgTimer = time;
+    setTimeout(()=>{ if(this._msgTimer === 0 && this.messages) this.messages.innerText = ""; }, time*16);
   }
-
 }
