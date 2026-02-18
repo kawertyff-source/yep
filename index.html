@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Arena Mobile V3</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- GAME UI -->
+<div id="ui">
+
+  <div class="topBar">
+    <div class="hp leftHP"><div id="playerHP"></div></div>
+    <div class="score">0 - 0</div>
+    <div class="hp rightHP"><div id="enemyHP"></div></div>
+  </div>
+
+  <div class="rightButtons">
+    <div class="btn light">Light</div>
+    <div class="btn heavy">Heavy</div>
+    <div class="btn dash">Dash</div>
+    <div class="btn block">Block</div>
+    <div class="btn skill">
+      <div id="skillPercent">0%</div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="main.js"></script>
+
+</body>
+</html>
